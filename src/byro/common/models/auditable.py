@@ -2,7 +2,10 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 
-class Auditable:
+class Auditable(models.Model):
+    class Meta:
+        abstract = True
+
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
