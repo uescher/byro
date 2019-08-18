@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import DetailView, FormView, ListView
 
-from byro.bookkeeping.models import RealTransactionSource
+from byro.bookkeeping.models import RealTransactionSource, Transaction
 
 
 class UploadForm(forms.ModelForm):
@@ -63,16 +63,15 @@ class UploadMatchView(DetailView):
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
         errors = success = 0
-        for real_transaction in obj.transactions.all():
+        for t in Transaction.objects.filter(bookings__source=obj):
             try:
-                real_transaction.derive_virtual_transactions()
+                t.process_transaction()
                 success += 1
-            except Exception:
+            except Exception as e:
                 errors += 1
+                print(e) # FIXME
         messages.info(
-            request,
-            '{success} successful matches, {errors} errors.'.format(
-                success=success, errors=errors
-            ),
+            self.request,
+            _( '{success} successful matches.'.format(success=success)),
         )
         return redirect('office:finance.uploads.list')
